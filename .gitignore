@@ -1,0 +1,8 @@
+case_auto.py
+define_auto.py
+riscv-spec*
+RV32IM_origin.v
+作りかけのアドレス32bit，データ16ビットメモリを使ったCPU
+wraper.py
+test.txt
+test.txt.txt
