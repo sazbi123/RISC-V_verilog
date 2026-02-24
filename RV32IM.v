@@ -62,6 +62,7 @@ module RV32IM (
             {internal_byte,internal_half}<=2'b00;
             wait_count<=1'b0;
             opcode<=32'd0;
+            rw_addr<=32'd0;
             // x0は常に0
             regfile[5'd0]<=32'd0;
         end
@@ -148,6 +149,82 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `BLT: begin
+                    if (result[0]==1) begin
+                        // fetch1でpcを+4するためここでは-4
+                        pc<=pc+{(imm_B[12])?19'h7fffff:19'd0,imm_B}-32'd4;
+                    end
+
+                    state<=`fetch1;
+                end
+                `BLTU: begin
+                    if (result[0]==1) begin
+                        // fetch1でpcを+4するためここでは-4
+                        pc<=pc+{(imm_B[12])?19'h7fffff:19'd0,imm_B}-32'd4;
+                    end
+
+                    state<=`fetch1;
+                end
+                `BGE: begin
+                    if (result[0]==0) begin
+                        // fetch1でpcを+4するためここでは-4
+                        pc<=pc+{(imm_B[12])?19'h7fffff:19'd0,imm_B}-32'd4;
+                    end
+
+                    state<=`fetch1;
+                end
+                `BGEU: begin
+                    if (result[0]==0) begin
+                        // fetch1でpcを+4するためここでは-4
+                        pc<=pc+{(imm_B[12])?19'h7fffff:19'd0,imm_B}-32'd4;
+                    end
+
+                    state<=`fetch1;
+                end
+                `LB: begin
+                    if (wait_count==1'b0) begin
+                        // rw_addrを出力
+                        addr_sel<=8'd1;
+                        rw_addr<=regfile[rs1]+{(imm_I[11])?20'hfffff:20'd0,imm_I};
+                        internal_rw<=`read;
+                        {internal_byte,internal_half}<=2'b10;
+                        wait_count<=1'b1;
+                    end
+                    else begin
+                        // x0は常に0
+                        if (rd==5'd0) begin
+                            regfile[rd]<=32'd0;
+                        end
+                        else begin
+                            regfile[rd]<={(data_in[7])?24'hffffff:24'd0,data_in[7:0]};
+                        end
+                        
+                        wait_count<=1'b0;
+                        state<=`fetch1;
+                    end
+                end
+                `LH: begin
+                    if (wait_count==1'b0) begin
+                        // rw_addrを出力
+                        addr_sel<=8'd1;
+                        rw_addr<=regfile[rs1]+{(imm_I[11])?20'hfffff:20'd0,imm_I};
+                        internal_rw<=`read;
+                        {internal_byte,internal_half}<=2'b01;
+                        wait_count<=1'b1;
+                    end
+                    else begin
+                        // x0は常に0
+                        if (rd==5'd0) begin
+                            regfile[rd]<=32'd0;
+                        end
+                        else begin
+                            regfile[rd]<={(data_in[15])?16'hffff:16'd0,data_in[15:0]};
+                        end
+                        
+                        wait_count<=1'b0;
+                        state<=`fetch1;
+                    end
+                end
                 default: ;
             endcase
         end
@@ -162,6 +239,12 @@ module RV32IM (
         case (alu_sel)
             `equal: begin
                 result={31'd0,(regfile[rs1]==regfile[rs2])};
+            end
+            `signed_comp: begin
+                result={31'd0,($signed(regfile[rs1])<$signed(regfile[rs2]))};
+            end
+            `unsigned_comp: begin
+                result={31'd0,($unsigned(regfile[rs1])<$unsigned(regfile[rs2]))};
             end
             default: begin
                 result=32'd0;
