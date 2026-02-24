@@ -65,3 +65,4 @@
 `define equal 8'd0
 `define signed_comp 8'd1
 `define unsigned_comp 8'd2
+`define add_alu 8'd3

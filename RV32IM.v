@@ -25,9 +25,11 @@ module RV32IM (
     reg [7:0] addr_sel;
     // 暫定のビット幅
     reg [7:0] alu_sel;
+    // 暫定のビット幅
+    reg [7:0] alu_data_in_sel;
     reg internal_rw,internal_half,internal_byte;
     reg wait_count;
-    wire [31:0] imm_U;
+    wire [31:0] imm_U,alu_data_in;
     wire [20:0] imm_J;
     wire [12:0] imm_B;
     wire [11:0] imm_I,imm_S;
@@ -41,6 +43,8 @@ module RV32IM (
     assign byte=internal_byte;
     assign addr=(addr_sel==8'd0)?pc:(
                 (addr_sel==8'd1)?rw_addr:32'd0);
+    assign alu_data_in=(alu_data_in_sel==8'd0)?regfile[rs2]:(
+                       (alu_data_in_sel==8'd1)?{(imm_I[11])?20'hfffff:20'd0,imm_I}:32'd0);
     // 各命令の分けるやつ定義（rdとかimmとか）
     assign rd=opcode[11:7];
     assign funct3=opcode[14:12];
@@ -317,7 +321,17 @@ module RV32IM (
                     internal_data_out<=regfile[rs2];
                     state<=`fetch1;
                 end
-                
+                `ADDI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
@@ -328,16 +342,20 @@ module RV32IM (
     // alu_selは命令を確定させるAlwaysで0にリセットし，resultはこのalwaysで値を確定
     // 後ですべてのパターンでalu_sel=0をしないといけない
     // alu_selがリセットされるとこのcaseに入る値も確定するのでresultも確定させればリセットできるはず
+    // ALUの入力データををWireにしてセレクタにより変えたら汎用性が上がるかも
     always @(*) begin
         case (alu_sel)
             `equal: begin
-                result={31'd0,(regfile[rs1]==regfile[rs2])};
+                result={31'd0,(regfile[rs1]==alu_data_in)};
             end
             `signed_comp: begin
-                result={31'd0,($signed(regfile[rs1])<$signed(regfile[rs2]))};
+                result={31'd0,($signed(regfile[rs1])<$signed(alu_data_in))};
             end
             `unsigned_comp: begin
-                result={31'd0,($unsigned(regfile[rs1])<$unsigned(regfile[rs2]))};
+                result={31'd0,($unsigned(regfile[rs1])<$unsigned(alu_data_in))};
+            end
+            `add_alu: begin
+                result=regfile[rs1]+alu_data_in;
             end
             default: begin
                 result=32'd0;
@@ -350,6 +368,56 @@ module RV32IM (
     always @(*) begin
         // 全部で48命令ある
         case (opcode[6:0])
+            // 9個
+            // ALU使用
+            7'b0010011: begin
+                case (opcode[14:12])
+                    // SLLI
+                    3'b001: begin
+                        next_state=`SLLI;
+                    end
+                    // ORI
+                    3'b110: begin
+                        next_state=`ORI;
+                    end
+                    3'b101: begin
+                        case (opcode[31:25])
+                            // SRLI
+                            7'b0000000: begin
+                                next_state=`SRLI;
+                            end
+                            // SRAI
+                            7'b0100000: begin
+                                next_state=`SRAI;
+                            end
+                            default: next_state=8'd0;
+                        endcase
+                    end
+                    // ADDI
+                    3'b000: begin
+                        next_state=`ADDI;
+                        alu_sel=`add_alu;
+                        alu_data_in_sel<=8'd1;
+                    end
+                    // ANDI
+                    3'b111: begin
+                        next_state=`ANDI;
+                    end
+                    // SLTIU
+                    3'b011: begin
+                        next_state=`SLTIU;
+                    end
+                    // XORI
+                    3'b100: begin
+                        next_state=`XORI;
+                    end
+                    // SLTI
+                    3'b010: begin
+                        next_state=`SLTI;
+                    end
+                    default: next_state=8'd0;
+                endcase
+            end
             // 6個
             // ALU使用
             7'b1100011: begin
@@ -358,31 +426,37 @@ module RV32IM (
                     3'b101: begin
                         next_state=`BGE;
                         alu_sel=`signed_comp;
+                        alu_data_in_sel<=8'd0;
                     end
                     // BEQ
                     3'b000: begin
                         next_state=`BEQ;
                         alu_sel=`equal;
+                        alu_data_in_sel<=8'd0;
                     end
                     // BGEU
                     3'b111: begin
                         next_state=`BGEU;
                         alu_sel=`unsigned_comp;
+                        alu_data_in_sel<=8'd0;
                     end
                     // BLTU
                     3'b110: begin
                         next_state=`BLTU;
                         alu_sel=`unsigned_comp;
+                        alu_data_in_sel<=8'd0;
                     end
                     // BNE
                     3'b001: begin
                         next_state=`BNE;
                         alu_sel=`equal;
+                        alu_data_in_sel<=8'd0;
                     end
                     // BLT
                     3'b100: begin
                         next_state=`BLT;
                         alu_sel=`signed_comp;
+                        alu_data_in_sel<=8'd0;
                     end
                     default: next_state=8'd0;
                 endcase
@@ -510,53 +584,6 @@ module RV32IM (
             7'b0001111: begin
                 // FENCE
                 next_state=`FENCE;
-            end
-            // 9個
-            7'b0010011: begin
-                case (opcode[14:12])
-                    // SLLI
-                    3'b001: begin
-                        next_state=`SLLI;
-                    end
-                    // ORI
-                    3'b110: begin
-                        next_state=`ORI;
-                    end
-                    3'b101: begin
-                        case (opcode[31:25])
-                            // SRLI
-                            7'b0000000: begin
-                                next_state=`SRLI;
-                            end
-                            // SRAI
-                            7'b0100000: begin
-                                next_state=`SRAI;
-                            end
-                            default: next_state=8'd0;
-                        endcase
-                    end
-                    // ADDI
-                    3'b000: begin
-                        next_state=`ADDI;
-                    end
-                    // ANDI
-                    3'b111: begin
-                        next_state=`ANDI;
-                    end
-                    // SLTIU
-                    3'b011: begin
-                        next_state=`SLTIU;
-                    end
-                    // XORI
-                    3'b100: begin
-                        next_state=`XORI;
-                    end
-                    // SLTI
-                    3'b010: begin
-                        next_state=`SLTI;
-                    end
-                    default: next_state=8'd0;
-                endcase
             end
             // 1個
             7'b0010111: begin
