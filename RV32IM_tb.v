@@ -1,5 +1,5 @@
-// `include "RV32IM.v"
-// `include "memory.v"
+`include "RV32IM.v"
+`include "memory.v"
 
 module RV32IM_tb ();
     reg clk,rst_n;
@@ -50,15 +50,15 @@ module RV32IM_tb ();
         $finish;
     end
 
-    // // iverilog用記述
-    // integer i;
+    // iverilog用記述
+    integer i;
 
-    // initial begin
-    //     $dumpfile("RV32IM.vcd");
-    //     $dumpvars(0, RV32IM_tb);
-    //     // メモリ配列を全部ダンプ
-    //     for (i = 0; i < 3; i = i + 1) begin
-    //         $dumpvars(0, RV32IM.regfile[i]);
-    //     end
-    // end
+    initial begin
+        $dumpfile("RV32IM.vcd");
+        $dumpvars(0, RV32IM_tb);
+        // メモリ配列を全部ダンプ
+        for (i = 0; i < 3; i = i + 1) begin
+            $dumpvars(0, RV32IM.regfile[i]);
+        end
+    end
 endmodule
