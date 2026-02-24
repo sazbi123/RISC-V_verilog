@@ -332,6 +332,28 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `SLTI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `SLTIU: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
@@ -340,7 +362,6 @@ module RV32IM (
     // ALU
     // alu_selとresultを使う
     // alu_selは命令を確定させるAlwaysで0にリセットし，resultはこのalwaysで値を確定
-    // 後ですべてのパターンでalu_sel=0をしないといけない
     // alu_selがリセットされるとこのcaseに入る値も確定するのでresultも確定させればリセットできるはず
     // ALUの入力データををWireにしてセレクタにより変えたら汎用性が上がるかも
     always @(*) begin
@@ -365,6 +386,8 @@ module RV32IM (
 
     // 何命令かを確定させ次のstateを決定するモジュール
     // これは共通で使用可（opcodeしか見ていないため）
+    // 後ですべてのパターンでalu_sel=0（リセット）をしないといけない
+    // 後ですべてのパターンでalu_data_in_sel=0（リセット）をしないといけない
     always @(*) begin
         // 全部で48命令ある
         case (opcode[6:0])
@@ -406,6 +429,8 @@ module RV32IM (
                     // SLTIU
                     3'b011: begin
                         next_state=`SLTIU;
+                        alu_sel=`unsigned_comp;
+                        alu_data_in_sel<=8'd1;
                     end
                     // XORI
                     3'b100: begin
@@ -414,6 +439,8 @@ module RV32IM (
                     // SLTI
                     3'b010: begin
                         next_state=`SLTI;
+                        alu_sel=`signed_comp;
+                        alu_data_in_sel<=8'd1;
                     end
                     default: next_state=8'd0;
                 endcase
