@@ -1,4 +1,4 @@
-`include "def_param.v"
+`include "def_param.vh"
 
 module memory (
     input wire [31:0] addr,
@@ -8,11 +8,17 @@ module memory (
 );
     reg [7:0] mem [0:`mem_size];
 
+    // iverilog用記述
     // memに対するシミュレーション用記述
     // test.hexファイルのデータををRegのmemに入れる．
     initial begin
         $readmemh("test.hex",mem);
     end
+
+    // // vivado用記述
+    // initial begin
+    //     $readmemh("test.dat",mem);
+    // end
     
     reg [31:0] internal_data_out;
 

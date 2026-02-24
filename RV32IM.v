@@ -1,11 +1,11 @@
-`include "def_param.v"
+`include "def_param.vh"
 
 // uartなし（現状）
 // CPUからみてinかoutかで命名
 // RV32IMって割り込みあるんですかね
 // 2クロックでフェッチデータが確定
-// https://risc-v-cpu-visualizer.vercel.app/assemblerでデバッグ中
-// https://risc-v-cpu-visualizer.vercel.app/converterこっちのほうがいいかもしない
+// https://risc-v-cpu-visualizer.vercel.app/assembler でデバッグ中
+// https://risc-v-cpu-visualizer.vercel.app/converter こっちのほうがいいかもしない(AUIPC, LUIは調子悪くて即値が全て0になる)
 module RV32IM (
     input wire clk,rst_n,
     input wire [31:0] data_in,
@@ -52,6 +52,7 @@ module RV32IM (
     assign imm_U={opcode[31:12],12'd0};
     assign imm_J={opcode[31],opcode[19:12],opcode[20],opcode[30:21],1'b0};
 
+    // fetch1でpcを+4するためPCをいじるときは-4
     always @(posedge clk) begin
         if (rst_n==1'b0) begin
             state<=`fetch1;
@@ -75,7 +76,7 @@ module RV32IM (
                         wait_count<=1'b1;
                     end
                     else begin
-                        opcode<={16'd0,data_in};
+                        opcode<=data_in;
                         wait_count<=1'b0;
                         state<=`decode;
                     end
@@ -105,16 +106,110 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `JAL: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=pc+32'd4;
+                    end
+
+                    // sign extended
+                    // fetch1でpcを+4するためここでは-4
+                    pc<=pc+{(imm_J[20])?11'h7ff:11'd0,imm_J}-32'd4;
+                    state<=`fetch1;
+                end
+                `JALR: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=pc+32'd4;
+                    end
+
+                    pc<=(({(imm_I[11])?20'hfffff:20'd0,imm_I}+regfile[rs1])&32'hfffffffe)-32'd4;
+                    state<=`fetch1;
+                end
+                `BEQ: begin
+                    if (result[0]==1) begin
+                        // fetch1でpcを+4するためここでは-4
+                        pc<=pc+{(imm_B[12])?19'h7fffff:19'd0,imm_B}-32'd4;
+                    end
+
+                    state<=`fetch1;
+                end
+                `BNE: begin
+                    if (result[0]==0) begin
+                        // fetch1でpcを+4するためここでは-4
+                        pc<=pc+{(imm_B[12])?19'h7fffff:19'd0,imm_B}-32'd4;
+                    end
+
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
     end
 
+    // ALU
+    // alu_selとresultを使う
+    // alu_selは命令を確定させるAlwaysで0にリセットし，resultはこのalwaysで値を確定
+    // 後ですべてのパターンでalu_sel=0をしないといけない
+    // alu_selがリセットされるとこのcaseに入る値も確定するのでresultも確定させればリセットできるはず
+    always @(*) begin
+        case (alu_sel)
+            `equal: begin
+                result={31'd0,(regfile[rs1]==regfile[rs2])};
+            end
+            default: begin
+                result=32'd0;
+            end
+        endcase
+    end
     // 何命令かを確定させ次のstateを決定するモジュール
     // これは共通で使用可（opcodeしか見ていないため）
     always @(*) begin
         // 全部で48命令ある
         case (opcode[6:0])
+            // 6個
+            // ALU使用
+            7'b1100011: begin
+                case (opcode[14:12])
+                    // BGE
+                    3'b101: begin
+                        next_state=`BGE;
+                        alu_sel=`signed_comp;
+                    end
+                    // BEQ
+                    3'b000: begin
+                        next_state=`BEQ;
+                        alu_sel=`equal;
+                    end
+                    // BGEU
+                    3'b111: begin
+                        next_state=`BGEU;
+                        alu_sel=`unsigned_comp;
+                    end
+                    // BLTU
+                    3'b110: begin
+                        next_state=`BLTU;
+                        alu_sel=`unsigned_comp;
+                    end
+                    // BNE
+                    3'b001: begin
+                        next_state=`BNE;
+                        alu_sel=`equal;
+                    end
+                    // BLT
+                    3'b100: begin
+                        next_state=`BLT;
+                        alu_sel=`signed_comp;
+                    end
+                    default: next_state=8'd0;
+                endcase
+            end
             // 5個
             7'b0000011: begin
                 case (opcode[14:12])
@@ -230,43 +325,6 @@ module RV32IM (
                             end
                             default: next_state=8'd0;
                         endcase
-                    end
-                    default: next_state=8'd0;
-                endcase
-            end
-            // 6個
-            // ALU使用
-            7'b1100011: begin
-                case (opcode[14:12])
-                    // BGE
-                    3'b101: begin
-                        next_state=`BGE;
-                        alu_sel=`signed_comp;
-                    end
-                    // BEQ
-                    3'b000: begin
-                        next_state=`BEQ;
-                        alu_sel=`equal;
-                    end
-                    // BGEU
-                    3'b111: begin
-                        next_state=`BGEU;
-                        alu_sel=`unsigned_comp;
-                    end
-                    // BLTU
-                    3'b110: begin
-                        next_state=`BLTU;
-                        alu_sel=`unsigned_comp;
-                    end
-                    // BNE
-                    3'b001: begin
-                        next_state=`BNE;
-                        alu_sel=`equal;
-                    end
-                    // BLT
-                    3'b100: begin
-                        next_state=`BLT;
-                        alu_sel=`signed_comp;
                     end
                     default: next_state=8'd0;
                 endcase

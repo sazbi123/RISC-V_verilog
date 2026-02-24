@@ -1,5 +1,5 @@
 // メモリのサイズ
-`define mem_size 16'hffff
+`define mem_size 8'hff
 
 // Read/Writeイネーブル
 `define read 1'b0
