@@ -317,6 +317,7 @@ module RV32IM (
                     internal_data_out<=regfile[rs2];
                     state<=`fetch1;
                 end
+                
                 default: ;
             endcase
         end
