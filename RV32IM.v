@@ -354,6 +354,39 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `XORI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `ORI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `ANDI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
@@ -378,6 +411,15 @@ module RV32IM (
             end
             `add_alu: begin
                 result=regfile[rs1]+alu_data_in;
+            end
+            `xor_alu: begin
+                result=regfile[rs1]^alu_data_in;
+            end
+            `or_alu: begin
+                result=regfile[rs1]|alu_data_in;
+            end
+            `and_alu: begin
+                result=regfile[rs1]&alu_data_in;
             end
             default: begin
                 result=32'd0;
@@ -404,6 +446,8 @@ module RV32IM (
                     // ORI
                     3'b110: begin
                         next_state=`ORI;
+                        alu_sel=`or_alu;
+                        alu_data_in_sel<=8'd1;
                     end
                     3'b101: begin
                         case (opcode[31:25])
@@ -427,6 +471,8 @@ module RV32IM (
                     // ANDI
                     3'b111: begin
                         next_state=`ANDI;
+                        alu_sel=`and_alu;
+                        alu_data_in_sel<=8'd1;
                     end
                     // SLTIU
                     3'b011: begin
@@ -437,6 +483,8 @@ module RV32IM (
                     // XORI
                     3'b100: begin
                         next_state=`XORI;
+                        alu_sel=`xor_alu;
+                        alu_data_in_sel<=8'd1;
                     end
                     // SLTI
                     3'b010: begin

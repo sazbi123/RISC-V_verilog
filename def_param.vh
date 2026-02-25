@@ -66,3 +66,6 @@
 `define signed_comp 8'd1
 `define unsigned_comp 8'd2
 `define add_alu 8'd3
+`define xor_alu 8'd4
+`define or_alu 8'd5
+`define and_alu 8'd6
