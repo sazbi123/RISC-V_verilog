@@ -44,7 +44,8 @@ module RV32IM (
     assign addr=(addr_sel==8'd0)?pc:(
                 (addr_sel==8'd1)?rw_addr:32'd0);
     assign alu_data_in=(alu_data_in_sel==8'd0)?regfile[rs2]:(
-                       (alu_data_in_sel==8'd1)?{(imm_I[11])?20'hfffff:20'd0,imm_I}:32'd0);
+                       (alu_data_in_sel==8'd1)?{(imm_I[11])?20'hfffff:20'd0,imm_I}:(
+                       (alu_data_in_sel==8'd2)?{27'd0,imm_I[4:0]}:32'd0));
     // 各命令の分けるやつ定義（rdとかimmとか）
     assign rd=opcode[11:7];
     assign funct3=opcode[14:12];
@@ -387,6 +388,40 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                // ここから未検証
+                `SLLI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `SRLI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `SRAI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
@@ -421,6 +456,16 @@ module RV32IM (
             `and_alu: begin
                 result=regfile[rs1]&alu_data_in;
             end
+            `left_shift_alu: begin
+                result=regfile[rs1]<<alu_data_in;
+            end
+            `right_logical_shift_alu: begin
+                result=regfile[rs1]>>alu_data_in;
+            end
+            // 算術右シフトができていない
+            `right_arithmetic_shift_alu: begin
+                result=regfile[rs1]>>>alu_data_in;
+            end
             default: begin
                 result=32'd0;
             end
@@ -442,22 +487,28 @@ module RV32IM (
                     // SLLI
                     3'b001: begin
                         next_state=`SLLI;
+                        alu_sel=`left_shift_alu;
+                        alu_data_in_sel=8'd2;
                     end
                     // ORI
                     3'b110: begin
                         next_state=`ORI;
                         alu_sel=`or_alu;
-                        alu_data_in_sel<=8'd1;
+                        alu_data_in_sel=8'd1;
                     end
                     3'b101: begin
                         case (opcode[31:25])
                             // SRLI
                             7'b0000000: begin
                                 next_state=`SRLI;
+                                alu_sel=`right_logical_shift_alu;
+                                alu_data_in_sel=8'd2;
                             end
                             // SRAI
                             7'b0100000: begin
                                 next_state=`SRAI;
+                                alu_sel=`right_arithmetic_shift_alu;
+                                alu_data_in_sel=8'd2;
                             end
                             default: next_state=8'd0;
                         endcase
@@ -466,31 +517,31 @@ module RV32IM (
                     3'b000: begin
                         next_state=`ADDI;
                         alu_sel=`add_alu;
-                        alu_data_in_sel<=8'd1;
+                        alu_data_in_sel=8'd1;
                     end
                     // ANDI
                     3'b111: begin
                         next_state=`ANDI;
                         alu_sel=`and_alu;
-                        alu_data_in_sel<=8'd1;
+                        alu_data_in_sel=8'd1;
                     end
                     // SLTIU
                     3'b011: begin
                         next_state=`SLTIU;
                         alu_sel=`unsigned_comp;
-                        alu_data_in_sel<=8'd1;
+                        alu_data_in_sel=8'd1;
                     end
                     // XORI
                     3'b100: begin
                         next_state=`XORI;
                         alu_sel=`xor_alu;
-                        alu_data_in_sel<=8'd1;
+                        alu_data_in_sel=8'd1;
                     end
                     // SLTI
                     3'b010: begin
                         next_state=`SLTI;
                         alu_sel=`signed_comp;
-                        alu_data_in_sel<=8'd1;
+                        alu_data_in_sel=8'd1;
                     end
                     default: next_state=8'd0;
                 endcase

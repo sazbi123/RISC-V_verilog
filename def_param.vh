@@ -69,3 +69,6 @@
 `define xor_alu 8'd4
 `define or_alu 8'd5
 `define and_alu 8'd6
+`define left_shift_alu 8'd7
+`define right_logical_shift_alu 8'd8
+`define right_arithmetic_shift_alu 8'd9
