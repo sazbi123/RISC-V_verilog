@@ -500,6 +500,56 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `SRL: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `SRA: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `OR: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `AND: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                // FENCE命令はよくわからない
+                // 指定したものを最適化により順序が壊れないように順序を指定する認識でいる
+                // 今回パイプラインとかしていないので何もしなくていいと思っている
+                `FENCE: begin
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
@@ -606,6 +656,8 @@ module RV32IM (
                             // SRA
                             3'b101: begin
                                 next_state=`SRA;
+                                alu_sel=`right_arithmetic_shift_alu;
+                                alu_data_in_sel=8'd4;
                             end
                             // SUB
                             3'b000: begin
@@ -621,6 +673,8 @@ module RV32IM (
                             // AND
                             3'b111: begin
                                 next_state=`AND;
+                                alu_sel=`and_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // SLL
                             3'b001: begin
@@ -643,10 +697,14 @@ module RV32IM (
                             // SRL
                             3'b101: begin
                                 next_state=`SRL;
+                                alu_sel=`right_logical_shift_alu;
+                                alu_data_in_sel=8'd4;
                             end
                             // OR
                             3'b110: begin
                                 next_state=`OR;
+                                alu_sel=`or_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // SLT
                             3'b010: begin
