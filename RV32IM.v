@@ -552,14 +552,39 @@ module RV32IM (
                 `FENCE: begin
                     state<=`fetch1;
                 end
+                // どちらもHALT命令（何もしない）とすることにした．もしかしたらこの部分は省略するかもしれない．
                 // ECALLもよくわからないので何もしない
                 // 上のサイトによるとシステムコールと表記されている
                 `ECALL: begin
-                    state<=`fetch1;
+                    state<=`ECALL;
                 end
                 // EBREAKも何もわからないので何もしない
                 // 上のサイトによるとデバッグコールと表記されている
                 `EBREAK: begin
+                    state<=`EBREAK;
+                end
+                `MUL: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 下位32bit
+                        regfile[rd]<=result[31:0];
+                    end
+
+                    state<=`fetch1;
+                end
+                `MULHSU: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 上位32bit
+                        regfile[rd]<=result[63:32];
+                    end
+
                     state<=`fetch1;
                 end
                 default: ;
@@ -569,7 +594,8 @@ module RV32IM (
 
     // ALU
     // 別モジュールにしてもいいかも
-    // alu_selとresultを使う
+    // alu_selとresultとalu_data_inを使う
+    // alu_data_inはセレクタ信号によりどれを使うかを命令決定時に決める
     // alu_selは命令を確定させるAlwaysで0にリセットし，resultはこのalwaysで値を確定
     // alu_selがリセットされるとこのcaseに入る値も確定するのでresultも確定させればリセットできるはず
     // ALUの入力データををWireにしてセレクタにより変えたら汎用性が上がるかも
@@ -607,6 +633,12 @@ module RV32IM (
             // ↑signedにしたら動いていて良さげ
             `right_arithmetic_shift_alu: begin
                 result=$signed(regfile[rs1])>>>alu_data_in;
+            end
+            `mul_ss_alu: begin
+                result=$signed(regfile[rs1])*$signed(alu_data_in);
+            end
+            `mul_su_alu: begin
+                result=$signed(regfile[rs1])*$unsigned(alu_data_in);
             end
             default: begin
                 result=64'd0;
@@ -647,6 +679,8 @@ module RV32IM (
                             // MUL
                             3'b000: begin
                                 next_state=`MUL;
+                                alu_sel=`mul_ss_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // DIVU
                             3'b101: begin

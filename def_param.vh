@@ -72,5 +72,7 @@
 `define left_shift_alu 8'd7
 `define right_logical_shift_alu 8'd8
 `define right_arithmetic_shift_alu 8'd9
-// singed singedでss
+// singed*singedでss
 `define mul_ss_alu 8'd10
+// signed*unsignedでsu
+`define mul_su_alu 8'd11
