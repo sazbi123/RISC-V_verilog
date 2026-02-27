@@ -544,10 +544,21 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                // https://qiita.com/asfdrwe/items/595c871611e6603741fa ここらによく書いてあるかもしれない
                 // FENCE命令はよくわからない
                 // 指定したものを最適化により順序が壊れないように順序を指定する認識でいる
                 // 今回パイプラインとかしていないので何もしなくていいと思っている
                 `FENCE: begin
+                    state<=`fetch1;
+                end
+                // ECALLもよくわからないので何もしない
+                // 上のサイトによるとシステムコールと表記されている
+                `ECALL: begin
+                    state<=`fetch1;
+                end
+                // EBREAKも何もわからないので何もしない
+                // 上のサイトによるとデバッグコールと表記されている
+                `EBREAK: begin
                     state<=`fetch1;
                 end
                 default: ;
