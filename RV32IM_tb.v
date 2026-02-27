@@ -56,8 +56,9 @@ module RV32IM_tb ();
     initial begin
         $dumpfile("RV32IM.vcd");
         $dumpvars(0, RV32IM_tb);
-        // メモリ配列を全部ダンプ
-        for (i = 0; i < 3; i = i + 1) begin
+
+        // メモリ配列を0から3までダンプ
+        for (i = 0; i < 4; i = i + 1) begin
             $dumpvars(0, RV32IM.regfile[i]);
         end
     end

@@ -18,6 +18,12 @@ module RV32IM (
     // 何も宣言しなかったらデフォルトでunsignedになるんですかね
     
     reg [31:0] regfile [0:31];
+
+    // シミュレーション用に一応全て0に初期化
+    initial begin
+        $readmemh("regfile_initial.hex",regfile);
+    end
+
     reg [31:0] pc,opcode,result,rw_addr,internal_data_out;
     // 暫定のビット幅
     reg [7:0] state;
@@ -45,9 +51,13 @@ module RV32IM (
     assign byte=internal_byte;
     assign addr=(addr_sel==8'd0)?pc:(
                 (addr_sel==8'd1)?rw_addr:32'd0);
+    // これは下位5ビットしか使わないやつはALUで範囲指定できるかもしれんがとりあえず動くものを作るので余分になるかも
+    // 8'd1と8'd2，8'd0と8'd4は上述の理由でまとめられる可能性あり
     assign alu_data_in=(alu_data_in_sel==8'd0)?regfile[rs2]:(
                        (alu_data_in_sel==8'd1)?{(imm_I[11])?20'hfffff:20'd0,imm_I}:(
-                       (alu_data_in_sel==8'd2)?{27'd0,imm_I[4:0]}:32'd0));
+                       (alu_data_in_sel==8'd2)?{27'd0,imm_I[4:0]}:(
+                       (alu_data_in_sel==8'd3)?-regfile[rs2]:(
+                       (alu_data_in_sel==8'd4)?{27'd0,regfile[rs2][4:0]}:32'd0))));
     // 各命令の分けるやつ定義（rdとかimmとか）
     assign rd=opcode[11:7];
     assign funct3=opcode[14:12];
@@ -390,7 +400,7 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
-                // ここから未検証
+                // ここから未検証（Vivadoで）
                 `SLLI: begin
                     // x0は常に0
                     if (rd==5'd0) begin
@@ -414,6 +424,39 @@ module RV32IM (
                     state<=`fetch1;
                 end
                 `SRAI: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `ADD: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `SUB: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `SLL: begin
                     // x0は常に0
                     if (rd==5'd0) begin
                         regfile[rd]<=32'd0;
@@ -484,6 +527,106 @@ module RV32IM (
     always @(*) begin
         // 全部で48命令ある
         case (opcode[6:0])
+            // 18個
+            // ALU使用
+            7'b0110011: begin
+                case (opcode[31:25])
+                    7'b0000001: begin
+                        case (opcode[14:12])
+                            // REM
+                            3'b110: begin
+                                next_state=`REM;
+                            end
+                            // REMU
+                            3'b111: begin
+                                next_state=`REMU;
+                            end
+                            // DIV
+                            3'b100: begin
+                                next_state=`DIV;
+                            end
+                            // MULH
+                            3'b001: begin
+                                next_state=`MULH;
+                            end
+                            // MUL
+                            3'b000: begin
+                                next_state=`MUL;
+                            end
+                            // DIVU
+                            3'b101: begin
+                                next_state=`DIVU;
+                            end
+                            // MULHSU
+                            3'b010: begin
+                                next_state=`MULHSU;
+                            end
+                            // MULHU
+                            3'b011: begin
+                                next_state=`MULHU;
+                            end
+                            default: next_state=8'd0;
+                        endcase
+                    end
+                    7'b0100000: begin
+                        case (opcode[14:12])
+                            // SRA
+                            3'b101: begin
+                                next_state=`SRA;
+                            end
+                            // SUB
+                            3'b000: begin
+                                next_state=`SUB;
+                                alu_sel=`add_alu;
+                                alu_data_in_sel=8'd3;
+                            end
+                            default: next_state=8'd0;
+                        endcase
+                    end
+                    7'b0000000: begin
+                        case (opcode[14:12])
+                            // AND
+                            3'b111: begin
+                                next_state=`AND;
+                            end
+                            // SLL
+                            3'b001: begin
+                                next_state=`SLL;
+                                alu_sel=`left_shift_alu;
+                                alu_data_in_sel=8'd4;
+                            end
+                            // XOR
+                            3'b100: begin
+                                next_state=`XOR;
+                            end
+                            // SLTU
+                            3'b011: begin
+                                next_state=`SLTU;
+                            end
+                            // SRL
+                            3'b101: begin
+                                next_state=`SRL;
+                            end
+                            // OR
+                            3'b110: begin
+                                next_state=`OR;
+                            end
+                            // SLT
+                            3'b010: begin
+                                next_state=`SLT;
+                            end
+                            // ADD
+                            3'b000: begin
+                                next_state=`ADD;
+                                alu_sel=`add_alu;
+                                alu_data_in_sel=8'd0;
+                            end
+                            default: next_state=8'd0;
+                        endcase
+                    end
+                    default: next_state=8'd0;
+                endcase
+            end
             // 9個
             // ALU使用
             7'b0010011: begin
@@ -615,99 +758,6 @@ module RV32IM (
                     // LW
                     3'b010: begin
                         next_state=`LW;
-                    end
-                    default: next_state=8'd0;
-                endcase
-            end
-            // 18個
-            7'b0110011: begin
-                case (opcode[31:25])
-                    7'b0000001: begin
-                        case (opcode[14:12])
-                            // REM
-                            3'b110: begin
-                                next_state=`REM;
-                            end
-                            // REMU
-                            3'b111: begin
-                                next_state=`REMU;
-                            end
-                            // DIV
-                            3'b100: begin
-                                next_state=`DIV;
-                            end
-                            // MULH
-                            3'b001: begin
-                                next_state=`MULH;
-                            end
-                            // MUL
-                            3'b000: begin
-                                next_state=`MUL;
-                            end
-                            // DIVU
-                            3'b101: begin
-                                next_state=`DIVU;
-                            end
-                            // MULHSU
-                            3'b010: begin
-                                next_state=`MULHSU;
-                            end
-                            // MULHU
-                            3'b011: begin
-                                next_state=`MULHU;
-                            end
-                            default: next_state=8'd0;
-                        endcase
-                    end
-                    7'b0100000: begin
-                        case (opcode[14:12])
-                            // SRA
-                            3'b101: begin
-                                next_state=`SRA;
-                            end
-                            // SUB
-                            3'b000: begin
-                                next_state=`SUB;
-                            end
-                            default: next_state=8'd0;
-                        endcase
-                    end
-                    7'b0000000: begin
-                        case (opcode[14:12])
-                            // AND
-                            3'b111: begin
-                                next_state=`AND;
-                            end
-                            // SLL
-                            3'b001: begin
-                                next_state=`SLL;
-                            end
-                            // XOR
-                            3'b100: begin
-                                next_state=`XOR;
-                            end
-                            // SLTU
-                            3'b011: begin
-                                next_state=`SLTU;
-                            end
-                            // SRL
-                            3'b101: begin
-                                next_state=`SRL;
-                            end
-                            // OR
-                            3'b110: begin
-                                next_state=`OR;
-                            end
-                            // SLT
-                            3'b010: begin
-                                next_state=`SLT;
-                            end
-                            // ADD
-                            3'b000: begin
-                                next_state=`ADD;
-                            end
-                            default: next_state=8'd0;
-                        endcase
                     end
                     default: next_state=8'd0;
                 endcase
