@@ -55,7 +55,7 @@ module RV32IM (
     // これは下位5ビットしか使わないやつはALUで範囲指定できるかもしれんがとりあえず動くものを作るので余分になるかも
     // 8'd1と8'd2，8'd0と8'd4は上述の理由でまとめられる可能性あり
     assign alu_data_in=(alu_data_in_sel==8'd0)?regfile[rs2]:(
-                       (alu_data_in_sel==8'd1)?{(imm_I[11])?20'hfffff:20'd0,imm_I}:(
+                       (alu_data_in_sel==8'd1)?{{20{imm_I[11]}},imm_I}:(
                        (alu_data_in_sel==8'd2)?{27'd0,imm_I[4:0]}:(
                        (alu_data_in_sel==8'd3)?-regfile[rs2]:(
                        (alu_data_in_sel==8'd4)?{27'd0,regfile[rs2][4:0]}:32'd0))));
@@ -138,7 +138,7 @@ module RV32IM (
 
                     // sign extended
                     // fetch1でpcを+4するためここでは-4
-                    pc<=pc+{(imm_J[20])?11'h7ff:11'd0,imm_J}-32'd4;
+                    pc<=pc+{{11{imm_J[20]}},imm_J}-32'd4;
                     state<=`fetch1;
                 end
                 `JALR: begin
@@ -150,13 +150,13 @@ module RV32IM (
                         regfile[rd]<=pc+32'd4;
                     end
 
-                    pc<=(({(imm_I[11])?20'hfffff:20'd0,imm_I}+regfile[rs1])&32'hfffffffe)-32'd4;
+                    pc<=(({{20{imm_I[11]}},imm_I}+regfile[rs1])&32'hfffffffe)-32'd4;
                     state<=`fetch1;
                 end
                 `BEQ: begin
                     if (result[0]==1) begin
                         // fetch1でpcを+4するためここでは-4
-                        pc<=pc+{(imm_B[12])?19'h7ffff:19'd0,imm_B}-32'd4;
+                        pc<=pc+{{19{imm_B[12]}},imm_B}-32'd4;
                     end
 
                     state<=`fetch1;
@@ -164,7 +164,7 @@ module RV32IM (
                 `BNE: begin
                     if (result[0]==0) begin
                         // fetch1でpcを+4するためここでは-4
-                        pc<=pc+{(imm_B[12])?19'h7ffff:19'd0,imm_B}-32'd4;
+                        pc<=pc+{{19{imm_B[12]}},imm_B}-32'd4;
                     end
 
                     state<=`fetch1;
@@ -172,7 +172,7 @@ module RV32IM (
                 `BLT: begin
                     if (result[0]==1) begin
                         // fetch1でpcを+4するためここでは-4
-                        pc<=pc+{(imm_B[12])?19'h7ffff:19'd0,imm_B}-32'd4;
+                        pc<=pc+{{19{imm_B[12]}},imm_B}-32'd4;
                     end
 
                     state<=`fetch1;
@@ -180,7 +180,7 @@ module RV32IM (
                 `BLTU: begin
                     if (result[0]==1) begin
                         // fetch1でpcを+4するためここでは-4
-                        pc<=pc+{(imm_B[12])?19'h7ffff:19'd0,imm_B}-32'd4;
+                        pc<=pc+{{19{imm_B[12]}},imm_B}-32'd4;
                     end
 
                     state<=`fetch1;
@@ -188,7 +188,7 @@ module RV32IM (
                 `BGE: begin
                     if (result[0]==0) begin
                         // fetch1でpcを+4するためここでは-4
-                        pc<=pc+{(imm_B[12])?19'h7ffff:19'd0,imm_B}-32'd4;
+                        pc<=pc+{{19{imm_B[12]}},imm_B}-32'd4;
                     end
 
                     state<=`fetch1;
@@ -196,7 +196,7 @@ module RV32IM (
                 `BGEU: begin
                     if (result[0]==0) begin
                         // fetch1でpcを+4するためここでは-4
-                        pc<=pc+{(imm_B[12])?19'h7ffff:19'd0,imm_B}-32'd4;
+                        pc<=pc+{{19{imm_B[12]}},imm_B}-32'd4;
                     end
 
                     state<=`fetch1;
@@ -205,7 +205,7 @@ module RV32IM (
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
                         addr_sel<=8'd1;
-                        rw_addr<=regfile[rs1]+{(imm_I[11])?20'hfffff:20'd0,imm_I};
+                        rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b10;
                         wait_count<=1'b1;
@@ -216,7 +216,7 @@ module RV32IM (
                             regfile[rd]<=32'd0;
                         end
                         else begin
-                            regfile[rd]<={(data_in[7])?24'hffffff:24'd0,data_in[7:0]};
+                            regfile[rd]<={{24{data_in[7]}},data_in[7:0]};
                         end
                         
                         wait_count<=1'b0;
@@ -227,7 +227,7 @@ module RV32IM (
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
                         addr_sel<=8'd1;
-                        rw_addr<=regfile[rs1]+{(imm_I[11])?20'hfffff:20'd0,imm_I};
+                        rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b01;
                         wait_count<=1'b1;
@@ -238,7 +238,7 @@ module RV32IM (
                             regfile[rd]<=32'd0;
                         end
                         else begin
-                            regfile[rd]<={(data_in[15])?16'hffff:16'd0,data_in[15:0]};
+                            regfile[rd]<={{16{data_in[15]}},data_in[15:0]};
                         end
                         
                         wait_count<=1'b0;
@@ -249,7 +249,7 @@ module RV32IM (
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
                         addr_sel<=8'd1;
-                        rw_addr<=regfile[rs1]+{(imm_I[11])?20'hfffff:20'd0,imm_I};
+                        rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b00;
                         wait_count<=1'b1;
@@ -271,7 +271,7 @@ module RV32IM (
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
                         addr_sel<=8'd1;
-                        rw_addr<=regfile[rs1]+{(imm_I[11])?20'hfffff:20'd0,imm_I};
+                        rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b10;
                         wait_count<=1'b1;
@@ -293,7 +293,7 @@ module RV32IM (
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
                         addr_sel<=8'd1;
-                        rw_addr<=regfile[rs1]+{(imm_I[11])?20'hfffff:20'd0,imm_I};
+                        rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b01;
                         wait_count<=1'b1;
@@ -313,7 +313,7 @@ module RV32IM (
                 end
                 `SB: begin
                     addr_sel<=8'd1;
-                    rw_addr<=regfile[rs1]+{(imm_S[11])?20'hfffff:20'd0,imm_S};
+                    rw_addr<=regfile[rs1]+{{20{imm_S[11]}},imm_S};
                     internal_rw<=`write;
                     {internal_byte,internal_half}<=2'b10;
                     internal_data_out<={24'd0,regfile[rs2][7:0]};
@@ -321,7 +321,7 @@ module RV32IM (
                 end
                 `SH: begin
                     addr_sel<=8'd1;
-                    rw_addr<=regfile[rs1]+{(imm_S[11])?20'hfffff:20'd0,imm_S};
+                    rw_addr<=regfile[rs1]+{{20{imm_S[11]}},imm_S};
                     internal_rw<=`write;
                     {internal_byte,internal_half}<=2'b01;
                     internal_data_out<={16'd0,regfile[rs2][15:0]};
@@ -329,7 +329,7 @@ module RV32IM (
                 end
                 `SW: begin
                     addr_sel<=8'd1;
-                    rw_addr<=regfile[rs1]+{(imm_S[11])?20'hfffff:20'd0,imm_S};
+                    rw_addr<=regfile[rs1]+{{20{imm_S[11]}},imm_S};
                     internal_rw<=`write;
                     {internal_byte,internal_half}<=2'b00;
                     internal_data_out<=regfile[rs2];
