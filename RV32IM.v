@@ -15,6 +15,8 @@ module RV32IM (
     output wire [8:0] uart,
     output wire half,byte
 );
+    // 何も宣言しなかったらデフォルトでunsignedになるんですかね
+    
     reg [31:0] regfile [0:31];
     reg [31:0] pc,opcode,result,rw_addr,internal_data_out;
     // 暫定のビット幅
@@ -459,12 +461,14 @@ module RV32IM (
             `left_shift_alu: begin
                 result=regfile[rs1]<<alu_data_in;
             end
+            // 算術右シフトをsignedで明示したのでこちらはunsignedで一応明示しておく
             `right_logical_shift_alu: begin
-                result=regfile[rs1]>>alu_data_in;
+                result=$unsigned(regfile[rs1])>>alu_data_in;
             end
             // 算術右シフトができていない
+            // ↑signedにしたら動いていて良さげ
             `right_arithmetic_shift_alu: begin
-                result=regfile[rs1]>>>alu_data_in;
+                result=$signed(regfile[rs1])>>>alu_data_in;
             end
             default: begin
                 result=32'd0;
