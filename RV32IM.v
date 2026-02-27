@@ -24,7 +24,8 @@ module RV32IM (
         $readmemh("regfile_initial.hex",regfile);
     end
 
-    reg [31:0] pc,opcode,result,rw_addr,internal_data_out;
+    reg [63:0] result;
+    reg [31:0] pc,opcode,rw_addr,internal_data_out;
     // 暫定のビット幅
     reg [7:0] state;
     // 暫定のビット幅
@@ -340,7 +341,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -351,7 +352,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -362,7 +363,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -373,7 +374,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -384,7 +385,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -395,7 +396,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -407,7 +408,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -418,7 +419,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -429,7 +430,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -440,7 +441,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -451,7 +452,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -462,7 +463,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -473,7 +474,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -484,7 +485,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -495,7 +496,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -506,7 +507,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -517,7 +518,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -528,7 +529,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -539,7 +540,7 @@ module RV32IM (
                         regfile[rd]<=32'd0;
                     end
                     else begin
-                        regfile[rd]<=result;
+                        regfile[rd]<=result[31:0];
                     end
 
                     state<=`fetch1;
@@ -575,13 +576,13 @@ module RV32IM (
     always @(*) begin
         case (alu_sel)
             `equal: begin
-                result={31'd0,(regfile[rs1]==alu_data_in)};
+                result={32'd0,31'd0,(regfile[rs1]==alu_data_in)};
             end
             `signed_comp: begin
-                result={31'd0,($signed(regfile[rs1])<$signed(alu_data_in))};
+                result={32'd0,31'd0,($signed(regfile[rs1])<$signed(alu_data_in))};
             end
             `unsigned_comp: begin
-                result={31'd0,($unsigned(regfile[rs1])<$unsigned(alu_data_in))};
+                result={32'd0,31'd0,($unsigned(regfile[rs1])<$unsigned(alu_data_in))};
             end
             `add_alu: begin
                 result=regfile[rs1]+alu_data_in;
@@ -608,7 +609,7 @@ module RV32IM (
                 result=$signed(regfile[rs1])>>>alu_data_in;
             end
             default: begin
-                result=32'd0;
+                result=64'd0;
             end
         endcase
     end
