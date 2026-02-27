@@ -467,6 +467,39 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `SLT: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `SLTU: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
+                `XOR: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        regfile[rd]<=result;
+                    end
+
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
@@ -598,10 +631,14 @@ module RV32IM (
                             // XOR
                             3'b100: begin
                                 next_state=`XOR;
+                                alu_sel=`xor_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // SLTU
                             3'b011: begin
                                 next_state=`SLTU;
+                                alu_sel=`unsigned_comp;
+                                alu_data_in_sel=8'd0;
                             end
                             // SRL
                             3'b101: begin
@@ -614,6 +651,8 @@ module RV32IM (
                             // SLT
                             3'b010: begin
                                 next_state=`SLT;
+                                alu_sel=`signed_comp;
+                                alu_data_in_sel=8'd0;
                             end
                             // ADD
                             3'b000: begin
