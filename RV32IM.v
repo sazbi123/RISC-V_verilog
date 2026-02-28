@@ -28,8 +28,7 @@ module RV32IM (
     reg [31:0] pc,opcode,rw_addr,internal_data_out;
     reg [5:0] state,next_state;
     reg addr_sel;
-    // 暫定のビット幅
-    reg [7:0] alu_sel;
+    reg [3:0] alu_sel;
     // 暫定のビット幅
     reg [7:0] alu_data_in_sel;
     reg internal_rw,internal_half,internal_byte;

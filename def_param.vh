@@ -64,21 +64,21 @@
 // `define LW2 6'd51
 
 // ALUのセレクト
-`define equal 8'd0
-`define signed_comp 8'd1
-`define unsigned_comp 8'd2
-`define add_alu 8'd3
-`define xor_alu 8'd4
-`define or_alu 8'd5
-`define and_alu 8'd6
-`define left_shift_alu 8'd7
-`define right_logical_shift_alu 8'd8
-`define right_arithmetic_shift_alu 8'd9
+`define equal 4'd0
+`define signed_comp 4'd1
+`define unsigned_comp 4'd2
+`define add_alu 4'd3
+`define xor_alu 4'd4
+`define or_alu 4'd5
+`define and_alu 4'd6
+`define left_shift_alu 4'd7
+`define right_logical_shift_alu 4'd8
+`define right_arithmetic_shift_alu 4'd9
 // singed*singedでss
-`define mul_ss_alu 8'd10
+`define mul_ss_alu 4'd10
 // signed*unsignedでsu
-`define mul_su_alu 8'd11
+`define mul_su_alu 4'd11
 // unsigned*unsignedでuu
-`define mul_uu_alu 8'd12
-`define signed_div_rem_alu 8'd13
-`define unsigned_div_rem_alu 8'd14
+`define mul_uu_alu 4'd12
+`define signed_div_rem_alu 4'd13
+`define unsigned_div_rem_alu 4'd14
