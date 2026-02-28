@@ -27,8 +27,7 @@ module RV32IM (
     reg [63:0] result;
     reg [31:0] pc,opcode,rw_addr,internal_data_out;
     reg [5:0] state,next_state;
-    // 暫定のビット幅
-    reg [7:0] addr_sel;
+    reg addr_sel;
     // 暫定のビット幅
     reg [7:0] alu_sel;
     // 暫定のビット幅
@@ -47,8 +46,8 @@ module RV32IM (
     assign rw=internal_rw;
     assign half=internal_half;
     assign byte=internal_byte;
-    assign addr=(addr_sel==8'd0)?pc:(
-                (addr_sel==8'd1)?rw_addr:32'd0);
+    assign addr=(addr_sel==1'd0)?pc:(
+                (addr_sel==1'd1)?rw_addr:32'd0);
     // これは下位5ビットしか使わないやつはALUで範囲指定できるかもしれんがとりあえず動くものを作るので余分になるかも
     // 8'd1と8'd2，8'd0と8'd4は上述の理由でまとめられる可能性あり
     assign alu_data_in=(alu_data_in_sel==8'd0)?regfile[rs2]:(
