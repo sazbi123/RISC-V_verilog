@@ -4,6 +4,7 @@
 // CPUからみてinかoutかで命名
 // RV32IMって割り込みあるんですかね
 // 2クロックでフェッチデータが確定
+// https://cpu.kanataso.net/04b-riscvtests.html#riscv-tests%E3%82%92%E3%83%92%E3%82%99%E3%83%AB%E3%83%88%E3%82%99%E3%81%99%E3%82%8B
 // https://risc-v-cpu-visualizer.vercel.app/assembler でデバッグ中
 // https://risc-v-cpu-visualizer.vercel.app/converter こっちのほうがいいかもしない(AUIPC, LUIは調子悪くて即値が全て0になる)
 module RV32IM (

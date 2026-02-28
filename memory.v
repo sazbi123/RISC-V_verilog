@@ -12,7 +12,7 @@ module memory (
     // memに対するシミュレーション用記述
     // test.hexファイルのデータををRegのmemに入れる．
     initial begin
-        $readmemh("test.hex",mem);
+        $readmemh("hello.hex",mem);
     end
     
     reg [31:0] internal_data_out;
