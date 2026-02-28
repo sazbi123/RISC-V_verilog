@@ -13,7 +13,7 @@ module memory (
     // memに対するシミュレーション用記述
     // test.hexファイルのデータををRegのmemに入れる．
     initial begin
-        $readmemh("/home/aikawa/Desktop/sigfox/riscv/target/share/riscv-tests/isa/rv32ui-p-addi.hex",mem);
+        $readmemh("/home/aikawa/Desktop/sigfox/riscv/hello.hex",mem);
     end
     
     reg [31:0] internal_data_out;

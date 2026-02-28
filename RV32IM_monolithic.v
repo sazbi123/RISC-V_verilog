@@ -20,10 +20,10 @@ module RV32IM (
     
     reg [31:0] regfile [0:31];
 
-    // シミュレーション用に一応全て0に初期化
-    initial begin
-        $readmemh("regfile_initial.hex",regfile);
-    end
+    // // シミュレーション用に一応全て0に初期化
+    // initial begin
+    //     $readmemh("regfile_initial.hex",regfile);
+    // end
 
     reg [63:0] result;
     reg [31:0] pc,opcode,rw_addr,internal_data_out;

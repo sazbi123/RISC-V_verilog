@@ -1,4 +1,4 @@
-`include "RV32IM.v"
+`include "RV32IM_monolithic.v"
 `include "memory.v"
 
 module RV32IM_tb ();
