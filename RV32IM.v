@@ -27,12 +27,11 @@ module RV32IM (
     reg [63:0] result;
     reg [31:0] pc,opcode,rw_addr,internal_data_out;
     reg [5:0] state,next_state;
-    reg addr_sel;
     reg [3:0] alu_sel;
-    // 暫定のビット幅
-    reg [7:0] alu_data_in_sel;
+    reg [2:0] alu_data_in_sel;
     reg internal_rw,internal_half,internal_byte;
     reg wait_count;
+    reg addr_sel;
     wire [31:0] imm_U,alu_data_in;
     wire [20:0] imm_J;
     wire [12:0] imm_B;
@@ -49,11 +48,11 @@ module RV32IM (
                 (addr_sel==1'd1)?rw_addr:32'd0);
     // これは下位5ビットしか使わないやつはALUで範囲指定できるかもしれんがとりあえず動くものを作るので余分になるかも
     // 8'd1と8'd2，8'd0と8'd4は上述の理由でまとめられる可能性あり
-    assign alu_data_in=(alu_data_in_sel==8'd0)?regfile[rs2]:(
-                       (alu_data_in_sel==8'd1)?{{20{imm_I[11]}},imm_I}:(
-                       (alu_data_in_sel==8'd2)?{27'd0,imm_I[4:0]}:(
-                       (alu_data_in_sel==8'd3)?-regfile[rs2]:(
-                       (alu_data_in_sel==8'd4)?{27'd0,regfile[rs2][4:0]}:32'd0))));
+    assign alu_data_in=(alu_data_in_sel==3'd0)?regfile[rs2]:(
+                       (alu_data_in_sel==3'd1)?{{20{imm_I[11]}},imm_I}:(
+                       (alu_data_in_sel==3'd2)?{27'd0,imm_I[4:0]}:(
+                       (alu_data_in_sel==3'd3)?-regfile[rs2]:(
+                       (alu_data_in_sel==3'd4)?{27'd0,regfile[rs2][4:0]}:32'd0))));
     // 各命令の分けるやつ定義（rdとかimmとか）
     assign rd=opcode[11:7];
     assign funct3=opcode[14:12];
@@ -746,49 +745,49 @@ module RV32IM (
                             3'b110: begin
                                 next_state=`REM;
                                 alu_sel=`signed_div_rem_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // REMU
                             3'b111: begin
                                 next_state=`REMU;
                                 alu_sel=`signed_div_rem_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // DIV
                             3'b100: begin
                                 next_state=`DIV;
                                 alu_sel=`signed_div_rem_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // MULH
                             3'b001: begin
                                 next_state=`MULH;
                                 alu_sel=`mul_ss_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // MUL
                             3'b000: begin
                                 next_state=`MUL;
                                 alu_sel=`mul_ss_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // DIVU
                             3'b101: begin
                                 next_state=`DIVU;
                                 alu_sel=`signed_div_rem_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // MULHSU
                             3'b010: begin
                                 next_state=`MULHSU;
                                 alu_sel=`mul_su_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // MULHU
                             3'b011: begin
                                 next_state=`MULHU;
                                 alu_sel=`mul_uu_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             default: next_state=`fetch1;
                         endcase
@@ -799,13 +798,13 @@ module RV32IM (
                             3'b101: begin
                                 next_state=`SRA;
                                 alu_sel=`right_arithmetic_shift_alu;
-                                alu_data_in_sel=8'd4;
+                                alu_data_in_sel=3'd4;
                             end
                             // SUB
                             3'b000: begin
                                 next_state=`SUB;
                                 alu_sel=`add_alu;
-                                alu_data_in_sel=8'd3;
+                                alu_data_in_sel=3'd3;
                             end
                             default: next_state=`fetch1;
                         endcase
@@ -816,49 +815,49 @@ module RV32IM (
                             3'b111: begin
                                 next_state=`AND;
                                 alu_sel=`and_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // SLL
                             3'b001: begin
                                 next_state=`SLL;
                                 alu_sel=`left_shift_alu;
-                                alu_data_in_sel=8'd4;
+                                alu_data_in_sel=3'd4;
                             end
                             // XOR
                             3'b100: begin
                                 next_state=`XOR;
                                 alu_sel=`xor_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // SLTU
                             3'b011: begin
                                 next_state=`SLTU;
                                 alu_sel=`unsigned_comp;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // SRL
                             3'b101: begin
                                 next_state=`SRL;
                                 alu_sel=`right_logical_shift_alu;
-                                alu_data_in_sel=8'd4;
+                                alu_data_in_sel=3'd4;
                             end
                             // OR
                             3'b110: begin
                                 next_state=`OR;
                                 alu_sel=`or_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // SLT
                             3'b010: begin
                                 next_state=`SLT;
                                 alu_sel=`signed_comp;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             // ADD
                             3'b000: begin
                                 next_state=`ADD;
                                 alu_sel=`add_alu;
-                                alu_data_in_sel=8'd0;
+                                alu_data_in_sel=3'd0;
                             end
                             default: next_state=`fetch1;
                         endcase
@@ -874,13 +873,13 @@ module RV32IM (
                     3'b001: begin
                         next_state=`SLLI;
                         alu_sel=`left_shift_alu;
-                        alu_data_in_sel=8'd2;
+                        alu_data_in_sel=3'd2;
                     end
                     // ORI
                     3'b110: begin
                         next_state=`ORI;
                         alu_sel=`or_alu;
-                        alu_data_in_sel=8'd1;
+                        alu_data_in_sel=3'd1;
                     end
                     3'b101: begin
                         case (opcode[31:25])
@@ -888,13 +887,13 @@ module RV32IM (
                             7'b0000000: begin
                                 next_state=`SRLI;
                                 alu_sel=`right_logical_shift_alu;
-                                alu_data_in_sel=8'd2;
+                                alu_data_in_sel=3'd2;
                             end
                             // SRAI
                             7'b0100000: begin
                                 next_state=`SRAI;
                                 alu_sel=`right_arithmetic_shift_alu;
-                                alu_data_in_sel=8'd2;
+                                alu_data_in_sel=3'd2;
                             end
                             default: next_state=`fetch1;
                         endcase
@@ -903,31 +902,31 @@ module RV32IM (
                     3'b000: begin
                         next_state=`ADDI;
                         alu_sel=`add_alu;
-                        alu_data_in_sel=8'd1;
+                        alu_data_in_sel=3'd1;
                     end
                     // ANDI
                     3'b111: begin
                         next_state=`ANDI;
                         alu_sel=`and_alu;
-                        alu_data_in_sel=8'd1;
+                        alu_data_in_sel=3'd1;
                     end
                     // SLTIU
                     3'b011: begin
                         next_state=`SLTIU;
                         alu_sel=`unsigned_comp;
-                        alu_data_in_sel=8'd1;
+                        alu_data_in_sel=3'd1;
                     end
                     // XORI
                     3'b100: begin
                         next_state=`XORI;
                         alu_sel=`xor_alu;
-                        alu_data_in_sel=8'd1;
+                        alu_data_in_sel=3'd1;
                     end
                     // SLTI
                     3'b010: begin
                         next_state=`SLTI;
                         alu_sel=`signed_comp;
-                        alu_data_in_sel=8'd1;
+                        alu_data_in_sel=3'd1;
                     end
                     default: next_state=`fetch1;
                 endcase
