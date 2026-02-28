@@ -1,5 +1,6 @@
 `include "def_param.vh"
 
+// BRAM推論されない
 module memory (
     input wire [31:0] addr,
     input wire [31:0] data_in,
@@ -12,7 +13,7 @@ module memory (
     // memに対するシミュレーション用記述
     // test.hexファイルのデータををRegのmemに入れる．
     initial begin
-        $readmemh("hello.hex",mem);
+        $readmemh("/home/aikawa/Desktop/sigfox/riscv/target/share/riscv-tests/isa/rv32ui-p-addi.hex",mem);
     end
     
     reg [31:0] internal_data_out;

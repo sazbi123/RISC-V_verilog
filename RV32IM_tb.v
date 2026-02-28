@@ -46,7 +46,7 @@ module RV32IM_tb ();
         rst_n=1'b0;
         #10;
         rst_n=1'b1;
-        #1000000;
+        #30000;
         $finish;
     end
 
