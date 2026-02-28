@@ -611,6 +611,54 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `DIV: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 上位32bit
+                        regfile[rd]<=result[63:32];
+                    end
+
+                    state<=`fetch1;
+                end
+                `DIVU: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 上位32bit
+                        regfile[rd]<=result[63:32];
+                    end
+
+                    state<=`fetch1;
+                end
+                `REM: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 下位32bit
+                        regfile[rd]<=result[31:0];
+                    end
+
+                    state<=`fetch1;
+                end
+                `REMU: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 下位32bit
+                        regfile[rd]<=result[31:0];
+                    end
+
+                    state<=`fetch1;
+                end
                 default: ;
             endcase
         end
@@ -667,6 +715,18 @@ module RV32IM (
             `mul_uu_alu: begin
                 result=$unsigned(regfile[rs1])*$unsigned(alu_data_in);
             end
+            `signed_div_rem_alu: begin
+                // 上位32bitは商，下位32bitは余り
+                result[63:32]=(alu_data_in==32'd0)?32'hffffffff:(
+                              ((regfile[rs1]==32'h80000000)&&(alu_data_in==32'hffffffff))?32'h80000000:$signed(regfile[rs1])/$signed(alu_data_in));
+                result[31:0]=(alu_data_in==32'd0)?regfile[rs1]:(
+                             ((regfile[rs1]==32'h80000000)&&(alu_data_in==32'hffffffff))?32'd0:$signed(regfile[rs1])%$signed(alu_data_in));
+            end
+            `unsigned_div_rem_alu: begin
+                // 上位32bitは商，下位32bitは余り
+                result[63:32]=(alu_data_in==32'd0)?32'hffffffff:$unsigned(regfile[rs1])/$unsigned(alu_data_in);
+                result[31:0]=(alu_data_in==32'd0)?regfile[rs1]:$unsigned(regfile[rs1])%$unsigned(alu_data_in);
+            end
             default: begin
                 result=64'd0;
             end
@@ -690,14 +750,20 @@ module RV32IM (
                             // REM
                             3'b110: begin
                                 next_state=`REM;
+                                alu_sel=`signed_div_rem_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // REMU
                             3'b111: begin
                                 next_state=`REMU;
+                                alu_sel=`signed_div_rem_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // DIV
                             3'b100: begin
                                 next_state=`DIV;
+                                alu_sel=`signed_div_rem_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // MULH
                             3'b001: begin
@@ -714,6 +780,8 @@ module RV32IM (
                             // DIVU
                             3'b101: begin
                                 next_state=`DIVU;
+                                alu_sel=`signed_div_rem_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // MULHSU
                             3'b010: begin

@@ -80,3 +80,5 @@
 `define mul_su_alu 8'd11
 // unsigned*unsignedでuu
 `define mul_uu_alu 8'd12
+`define signed_div_rem_alu 8'd13
+`define unsigned_div_rem_alu 8'd14
