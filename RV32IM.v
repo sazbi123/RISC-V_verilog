@@ -26,10 +26,7 @@ module RV32IM (
 
     reg [63:0] result;
     reg [31:0] pc,opcode,rw_addr,internal_data_out;
-    // 暫定のビット幅
-    reg [7:0] state;
-    // 暫定のビット幅
-    reg [7:0] next_state;
+    reg [5:0] state,next_state;
     // 暫定のビット幅
     reg [7:0] addr_sel;
     // 暫定のビット幅
@@ -795,7 +792,7 @@ module RV32IM (
                                 alu_sel=`mul_uu_alu;
                                 alu_data_in_sel=8'd0;
                             end
-                            default: next_state=8'd0;
+                            default: next_state=`fetch1;
                         endcase
                     end
                     7'b0100000: begin
@@ -812,7 +809,7 @@ module RV32IM (
                                 alu_sel=`add_alu;
                                 alu_data_in_sel=8'd3;
                             end
-                            default: next_state=8'd0;
+                            default: next_state=`fetch1;
                         endcase
                     end
                     7'b0000000: begin
@@ -865,10 +862,10 @@ module RV32IM (
                                 alu_sel=`add_alu;
                                 alu_data_in_sel=8'd0;
                             end
-                            default: next_state=8'd0;
+                            default: next_state=`fetch1;
                         endcase
                     end
-                    default: next_state=8'd0;
+                    default: next_state=`fetch1;
                 endcase
             end
             // 9個
@@ -901,7 +898,7 @@ module RV32IM (
                                 alu_sel=`right_arithmetic_shift_alu;
                                 alu_data_in_sel=8'd2;
                             end
-                            default: next_state=8'd0;
+                            default: next_state=`fetch1;
                         endcase
                     end
                     // ADDI
@@ -934,7 +931,7 @@ module RV32IM (
                         alu_sel=`signed_comp;
                         alu_data_in_sel=8'd1;
                     end
-                    default: next_state=8'd0;
+                    default: next_state=`fetch1;
                 endcase
             end
             // 6個
@@ -977,7 +974,7 @@ module RV32IM (
                         alu_sel=`signed_comp;
                         alu_data_in_sel<=8'd0;
                     end
-                    default: next_state=8'd0;
+                    default: next_state=`fetch1;
                 endcase
             end
             // 5個
@@ -1003,7 +1000,7 @@ module RV32IM (
                     3'b010: begin
                         next_state=`LW;
                     end
-                    default: next_state=8'd0;
+                    default: next_state=`fetch1;
                 endcase
             end
             // 1個
@@ -1031,7 +1028,7 @@ module RV32IM (
                     3'b001: begin
                         next_state=`SH;
                     end
-                    default: next_state=8'd0;
+                    default: next_state=`fetch1;
                 endcase
             end
             // 1個
@@ -1050,7 +1047,7 @@ module RV32IM (
                     12'b000000000001: begin
                         next_state=`EBREAK;
                     end
-                    default: next_state=8'd0;
+                    default: next_state=`fetch1;
                 endcase
             end
             // 1個
@@ -1063,7 +1060,7 @@ module RV32IM (
                 // JAL
                 next_state=`JAL;
             end
-            default: next_state=8'd0;
+            default: next_state=`fetch1;
         endcase
     end
 endmodule
