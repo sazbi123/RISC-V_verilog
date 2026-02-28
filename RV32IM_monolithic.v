@@ -2,7 +2,7 @@
 
 // uartなし（現状）
 // CPUからみてinかoutかで命名
-// RV32IMって割り込みあるんですかね
+// RV32IMって割り込みあるんですかね => ありましたEBCALL，EBREAK
 // 2クロックでフェッチデータが確定
 // https://cpu.kanataso.net/04b-riscvtests.html#riscv-tests%E3%82%92%E3%83%92%E3%82%99%E3%83%AB%E3%83%88%E3%82%99%E3%81%99%E3%82%8B
 // https://risc-v-cpu-visualizer.vercel.app/assembler でデバッグ中
