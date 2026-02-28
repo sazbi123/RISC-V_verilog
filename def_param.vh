@@ -59,7 +59,9 @@
 `define DIVU 8'd48
 `define REM 8'd49
 `define REMU 8'd50
-`define LW2 8'd51
+// 何だこれM拡張にもないし他にもない
+// defineを生成するときにミスったか？
+// `define LW2 8'd51
 
 // ALUのセレクト
 `define equal 8'd0
