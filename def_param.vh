@@ -76,3 +76,5 @@
 `define mul_ss_alu 8'd10
 // signed*unsignedでsu
 `define mul_su_alu 8'd11
+// unsigned*unsignedでuu
+`define mul_uu_alu 8'd12

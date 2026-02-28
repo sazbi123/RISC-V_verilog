@@ -575,7 +575,31 @@ module RV32IM (
 
                     state<=`fetch1;
                 end
+                `MULH: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 下位32bit
+                        regfile[rd]<=result[63:32];
+                    end
+
+                    state<=`fetch1;
+                end
                 `MULHSU: begin
+                    // x0は常に0
+                    if (rd==5'd0) begin
+                        regfile[rd]<=32'd0;
+                    end
+                    else begin
+                        // 上位32bit
+                        regfile[rd]<=result[63:32];
+                    end
+
+                    state<=`fetch1;
+                end
+                `MULHU: begin
                     // x0は常に0
                     if (rd==5'd0) begin
                         regfile[rd]<=32'd0;
@@ -638,7 +662,10 @@ module RV32IM (
                 result=$signed(regfile[rs1])*$signed(alu_data_in);
             end
             `mul_su_alu: begin
-                result=$signed(regfile[rs1])*$unsigned(alu_data_in);
+                result=$signed({{32{regfile[rs1][31]}},regfile[rs1]})*$unsigned({32'd0,alu_data_in});
+            end
+            `mul_uu_alu: begin
+                result=$unsigned(regfile[rs1])*$unsigned(alu_data_in);
             end
             default: begin
                 result=64'd0;
@@ -675,6 +702,8 @@ module RV32IM (
                             // MULH
                             3'b001: begin
                                 next_state=`MULH;
+                                alu_sel=`mul_ss_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // MUL
                             3'b000: begin
@@ -689,10 +718,14 @@ module RV32IM (
                             // MULHSU
                             3'b010: begin
                                 next_state=`MULHSU;
+                                alu_sel=`mul_su_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             // MULHU
                             3'b011: begin
                                 next_state=`MULHU;
+                                alu_sel=`mul_uu_alu;
+                                alu_data_in_sel=8'd0;
                             end
                             default: next_state=8'd0;
                         endcase
