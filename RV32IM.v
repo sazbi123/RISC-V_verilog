@@ -71,7 +71,7 @@ module RV32IM (
     always @(posedge clk) begin
         if (rst_n==1'b0) begin
             state<=`fetch1;
-            addr_sel<=8'd0;
+            addr_sel<=1'd0;
             pc<=32'hfffffffc;
             internal_rw<=`read;
             internal_data_out<=32'd0;
@@ -86,7 +86,7 @@ module RV32IM (
             case (state)
                 `fetch1: begin
                     if (wait_count==1'b0) begin
-                        addr_sel<=8'd0;
+                        addr_sel<=1'd0;
                         pc<=pc+32'd4;
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b00;
@@ -200,7 +200,7 @@ module RV32IM (
                 `LB: begin
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
-                        addr_sel<=8'd1;
+                        addr_sel<=1'd1;
                         rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b10;
@@ -222,7 +222,7 @@ module RV32IM (
                 `LH: begin
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
-                        addr_sel<=8'd1;
+                        addr_sel<=1'd1;
                         rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b01;
@@ -244,7 +244,7 @@ module RV32IM (
                 `LW: begin
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
-                        addr_sel<=8'd1;
+                        addr_sel<=1'd1;
                         rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b00;
@@ -266,7 +266,7 @@ module RV32IM (
                 `LBU: begin
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
-                        addr_sel<=8'd1;
+                        addr_sel<=1'd1;
                         rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b10;
@@ -288,7 +288,7 @@ module RV32IM (
                 `LHU: begin
                     if (wait_count==1'b0) begin
                         // rw_addrを出力
-                        addr_sel<=8'd1;
+                        addr_sel<=1'd1;
                         rw_addr<=regfile[rs1]+{{20{imm_I[11]}},imm_I};
                         internal_rw<=`read;
                         {internal_byte,internal_half}<=2'b01;
@@ -308,7 +308,7 @@ module RV32IM (
                     end
                 end
                 `SB: begin
-                    addr_sel<=8'd1;
+                    addr_sel<=1'd1;
                     rw_addr<=regfile[rs1]+{{20{imm_S[11]}},imm_S};
                     internal_rw<=`write;
                     {internal_byte,internal_half}<=2'b10;
@@ -316,7 +316,7 @@ module RV32IM (
                     state<=`fetch1;
                 end
                 `SH: begin
-                    addr_sel<=8'd1;
+                    addr_sel<=1'd1;
                     rw_addr<=regfile[rs1]+{{20{imm_S[11]}},imm_S};
                     internal_rw<=`write;
                     {internal_byte,internal_half}<=2'b01;
@@ -324,7 +324,7 @@ module RV32IM (
                     state<=`fetch1;
                 end
                 `SW: begin
-                    addr_sel<=8'd1;
+                    addr_sel<=1'd1;
                     rw_addr<=regfile[rs1]+{{20{imm_S[11]}},imm_S};
                     internal_rw<=`write;
                     {internal_byte,internal_half}<=2'b00;
