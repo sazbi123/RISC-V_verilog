@@ -6,13 +6,19 @@ module core (
     input wire [5:0] next_state,
     input wire [2:0] alu_data_in_sel,
     input wire rst_n,clk,
-    output wire [31:0] data_out,alu_data_in,
+    output wire [31:0] data_out,alu_data_in,opcode,
     output wire [31:0] addr,alu_data_1,
     output wire rw,
     output wire half,byte
 );
     reg [31:0] regfile [0:31];
-    reg [31:0] pc,rw_addr,internal_data_out,opcode;
+
+    // // シミュレーション用に一応全て0に初期化
+    // initial begin
+    //     $readmemh("regfile_initial.hex",regfile);
+    // end
+    
+    reg [31:0] pc,rw_addr,internal_data_out,internal_opcode;
     reg [5:0] state;
     reg internal_rw,addr_sel,internal_half,internal_byte;
     reg wait_count;
@@ -24,6 +30,7 @@ module core (
     wire [4:0] rd,rs1,rs2;
     wire [2:0] funct3;
 
+    assign opcode=internal_opcode;
     assign alu_data_1=regfile[rs1];
     assign half=internal_half;
     assign byte=internal_byte;
@@ -31,16 +38,16 @@ module core (
     assign rw=internal_rw;
     assign addr=(addr_sel==1'd0)?pc:(
                 (addr_sel==1'd1)?rw_addr:32'd0);
-    assign rd=opcode[11:7];
-    assign funct3=opcode[14:12];
-    assign rs1=opcode[19:15];
-    assign rs2=opcode[24:20];
-    assign funct7=opcode[31:25];
-    assign imm_I=opcode[31:20];
-    assign imm_S={opcode[31:25],opcode[11:7]};
-    assign imm_B={opcode[31],opcode[7],opcode[30:25],opcode[11:8],1'b0};
-    assign imm_U={opcode[31:12],12'd0};
-    assign imm_J={opcode[31],opcode[19:12],opcode[20],opcode[30:21],1'b0};
+    assign rd=internal_opcode[11:7];
+    assign funct3=internal_opcode[14:12];
+    assign rs1=internal_opcode[19:15];
+    assign rs2=internal_opcode[24:20];
+    assign funct7=internal_opcode[31:25];
+    assign imm_I=internal_opcode[31:20];
+    assign imm_S={internal_opcode[31:25],internal_opcode[11:7]};
+    assign imm_B={internal_opcode[31],internal_opcode[7],internal_opcode[30:25],internal_opcode[11:8],1'b0};
+    assign imm_U={internal_opcode[31:12],12'd0};
+    assign imm_J={internal_opcode[31],internal_opcode[19:12],internal_opcode[20],internal_opcode[30:21],1'b0};
     assign alu_data_in=(alu_data_in_sel==3'd0)?regfile[rs2]:(
                        (alu_data_in_sel==3'd1)?{{20{imm_I[11]}},imm_I}:(
                        (alu_data_in_sel==3'd2)?{27'd0,imm_I[4:0]}:(
@@ -56,7 +63,7 @@ module core (
             internal_data_out<=32'd0;
             {internal_byte,internal_half}<=2'b00;
             wait_count<=1'b0;
-            opcode<=32'd0;
+            internal_opcode<=32'd0;
             rw_addr<=32'd0;
             // x0は常に0
             regfile[5'd0]<=32'd0;
@@ -72,7 +79,7 @@ module core (
                         wait_count<=1'b1;
                     end
                     else begin
-                        opcode<=data_in;
+                        internal_opcode<=data_in;
                         wait_count<=1'b0;
                         state<=`decode;
                     end
