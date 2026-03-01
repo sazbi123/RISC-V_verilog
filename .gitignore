@@ -4,3 +4,5 @@ RV32IM_origin.v
 test.txt
 test.txt.txt
 target
+bin2hex.py
+hello.hex
